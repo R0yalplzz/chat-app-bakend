@@ -13,9 +13,12 @@ export const newChatController = expressAsyncHandler(async (req, res, next) => {
 
 export const getAllChatController = expressAsyncHandler(
   async (req, res, next) => {
-    const allChats = await Chat.find({ members: { $in: req._id } }).sort({
-      updatedAt: -1,
-    });
+    const allChats = await Chat.find({ members: { $in: [req._id] } })
+      .populate("lastMessage")
+      .sort({
+        updatedAt: -1,
+      });
+    console.log(allChats);
     res.status(200).send({
       message: "Chat fetched successfully",
       success: true,
