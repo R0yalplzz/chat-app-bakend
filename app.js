@@ -13,6 +13,8 @@ import messageRoutes from "./src/routes/messageRoutes.js";
 const app = express();
 
 const server = http.createServer(app);
+
+const onlineUser = [];
 const io = new Server(server, {
   cors: { origin: "http://localhost:3000", methods: ["GET", "POST"] },
 });
@@ -47,6 +49,13 @@ io.on("connection", (socket) => {
 
   socket.on("user-typing", (data) => {
     io.to(data.members[0]).to(data.members[1]).emit("started-typing", data);
+  });
+
+  socket.on("user-login", (userId) => {
+    if (!onlineUser.includes(userId)) {
+      onlineUser.push(userId);
+    }
+    socket.emit("online-users", onlineUser);
   });
 });
 
