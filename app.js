@@ -57,6 +57,11 @@ io.on("connection", (socket) => {
     }
     socket.emit("online-users", onlineUser);
   });
+
+  socket.on("user-offline", (userId) => {
+    onlineUser.splice(onlineUser.indexOf(userId),1);
+    io.emit("online-user-update", onlineUser);
+  });
 });
 
 server.listen(port, () => {

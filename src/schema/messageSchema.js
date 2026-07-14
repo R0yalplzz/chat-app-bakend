@@ -12,7 +12,11 @@ let messageSchema = Schema(
     },
     text: {
       type: String,
-      required: true,
+      required: false,
+    },
+    image: {
+      type: String,
+      required: false,
     },
     read: {
       type: Boolean,
