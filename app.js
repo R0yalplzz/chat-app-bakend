@@ -12,9 +12,9 @@ import messageRoutes from "./src/routes/messageRoutes.js";
 
 const app = express();
 
-const server = http.createServer(app);
+export const server = http.createServer(app);
 
-const onlineUser = [];
+const onlineUsers = new Map();
 const io = new Server(server, {
   cors: { origin: "http://localhost:3000", methods: ["GET", "POST"] },
 });
@@ -31,6 +31,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
 
 io.on("connection", (socket) => {
+  console.log("Socket connected:", socket.id);
   socket.on("join-room", (userid) => {
     socket.join(userid);
   });
@@ -39,6 +40,10 @@ io.on("connection", (socket) => {
     io.to(message.members[0])
       .to(message.members[1])
       .emit("receive-message", message);
+
+    io.to(message.members[0])
+      .to(message.members[1])
+      .emit("set-message-count", message);
   });
 
   socket.on("clear-unread-messages", (data) => {
@@ -52,15 +57,17 @@ io.on("connection", (socket) => {
   });
 
   socket.on("user-login", (userId) => {
-    if (!onlineUser.includes(userId)) {
-      onlineUser.push(userId);
-    }
-    socket.emit("online-users", onlineUser);
+    socket.userId = userId;
+    onlineUsers.set(userId, socket.id);
+
+    io.emit("online-users", [...onlineUsers.keys()]);
   });
 
-  socket.on("user-offline", (userId) => {
-    onlineUser.splice(onlineUser.indexOf(userId),1);
-    io.emit("online-user-update", onlineUser);
+  socket.on("disconnect", () => {
+    if (socket.userId) {
+      onlineUsers.delete(socket.userId);
+      io.emit("online-users", [...onlineUsers.keys()]);
+    }
   });
 });
 
